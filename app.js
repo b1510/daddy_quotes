@@ -1,32 +1,97 @@
-//L'application requiert l'utilisation du module Express.
-//La variable express nous permettra d'utiliser les fonctionnalités du module Express.  
+
 var express = require('express');
- 
-// Nous définissons ici les paramètres du serveur.
-var hostname = 'localhost'; 
-var port = 3000; 
- 
-// La variable mongoose nous permettra d'utiliser les fonctionnalités du module mongoose.
-var mongoose = require('mongoose'); 
-// Ces options sont recommandées par mLab pour une connexion à la base
-var options = { server: { socketOptions: { keepAlive: 300000, connectTimeoutMS: 30000 } }, 
-replset: { socketOptions: { keepAlive: 300000, connectTimeoutMS : 30000 } } };
- 
-//URL de notre base
-var urlmongo = "mongodb://samyhama:ayOMM27iGJczxygM@ds151108.mlab.com:51108/restfrugaldb"; 
-var urlmongo = "mongodb+srv://samyhama:ayOMM27iGJczxygM@cluster0-wvgod.mongodb.net/test?retryWrites=true"
-// Nous connectons l'API à notre base de données
-mongoose.connect(urlmongo, options);
- 
-var db = mongoose.connection; 
-db.on('error', console.error.bind(console, 'Erreur lors de la connexion')); 
-db.once('open', function (){
-    console.log("Connexion à la base OK"); 
-}); 
- 
-// Nous créons un objet de type Express. 
-var app = express(); 
- 
-var bodyParser = require("body-parser"); 
+var hostname = 'localhost';
+var port = 3000;
+var mongoose = require('mongoose');
+var options = {
+    server: { socketOptions: { keepAlive: 300000, connectTimeoutMS: 30000 } },
+    replset: { socketOptions: { keepAlive: 300000, connectTimeoutMS: 30000 } }
+};
+var urlmongo = "mongodb+srv://samyhama:daddyQuoteDb@cluster0-wvgod.mongodb.net/test?retryWrites=true"
+
+// mongoose.connect(urlmongo, options);
+mongoose.connect(urlmongo, { useNewUrlParser: true });
+
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'Erreur lors de la connexion'));
+db.once('open', function () {
+    console.log("Connexion à la base OK");
+});
+
+
+var app = express();
+var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+const quoteSchema = require('./quotes/models/quotes.model');
+
+let Quote = mongoose.model('Quote', quoteSchema);
+var myRouter = express.Router();
+myRouter.route('/')
+    .all(function (req, res) {
+        res.json({ message: "Bienvenue sur notre Frugal API ", methode: req.method });
+    });
+
+myRouter.route('/quotes')
+    .get(function (req, res) {
+        Quote.find(function (err, quotes) {
+            if (err) {
+                res.send(err);
+            }
+            res.json(quotes);
+        });
+    })
+    .post(function (req, res) {
+        var Quote = new Quote();
+        Quote.quote = req.body.quote;
+        Quote.exemple = req.body.exemple;
+        Quote.author = req.body.author;
+        Quote.context = req.body.context;
+        Quote.save(function (err) {
+            if (err) {
+                res.send(err);
+            }
+            res.json({ message: 'Bravo, la Quote est maintenant stockée en base de données' });
+        });
+    });
+
+myRouter.route('/quotes/:Quote_id')
+    .get(function (req, res) {
+        Quote.findById(req.params.Quote_id, function (err, Quote) {
+            if (err)
+                res.send(err);
+            res.json(Quote);
+        });
+    })
+    .put(function (req, res) {
+        Quote.findById(req.params.Quote_id, function (err, Quote) {
+            if (err) {
+                res.send(err);
+            }
+            Quote.quote = req.body.quote;
+            Quote.exemple = req.body.exemple;
+            Quote.author = req.body.author;
+            Quote.context = req.body.context;
+            Quote.save(function (err) {
+                if (err) {
+                    res.send(err);
+                }
+                res.json({ message: 'Bravo, mise à jour des données OK' });
+            });
+        });
+    })
+    .delete(function (req, res) {
+
+        Quote.remove({ _id: req.params.Quote_id }, function (err, Quote) {
+            if (err) {
+                res.send(err);
+            }
+            res.json({ message: "Bravo, Quote supprimée" });
+        });
+
+    });
+app.use(myRouter);
+app.listen(port, hostname, function () {
+    console.log("Mon serveur fonctionne sur http://" + hostname + ":" + port);
+});
