@@ -1,0 +1,20 @@
+{
+  "name": "daddy_quote",
+  "version": "1.0.0",
+  "description": "Daddy quotes, the good and the bad ones",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "dad",
+    "daddy",
+    "quote"
+  ],
+  "author": "SamYhama",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.4",
+    "mongoose": "^5.4.22"
+  }
+}
